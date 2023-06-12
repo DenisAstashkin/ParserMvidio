@@ -69,3 +69,11 @@ def SaveImage(URL: str, Path: str, names: list) -> list:
             
             
     return images
+
+
+
+def GetPath(names: list, path: str) -> str:
+    res = []
+    for name in names:
+        res.append(f"{path}{name}")
+    return res
