@@ -54,3 +54,18 @@ def GetRespJson(TypeReq: str, URL: str, json = None, params=None):
     session.close()
     
     return response.json()
+
+
+def SaveImage(URL: str, Path: str, names: list) -> list:    
+    images = []
+    for name in names:              
+        if (name.find('s') != -1) or (name.removeprefix('Pdb/').removesuffix(".jpg").isdigit() == True):
+            continue
+        if (os.path.exists(f"{PATH}\\{Path}\\{name.removeprefix('Pdb/')}")) == False:
+            with open(f"{Path}/{name.removeprefix('Pdb/')}", "wb") as file:
+                file.write(requests.get(f"{URL}{name}").content)  
+        if  (f"{PATH}\\{Path}\\{name.removeprefix('Pdb/')}" in images) == False:
+            images.append(f"{name}")
+            
+            
+    return images
