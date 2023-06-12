@@ -134,3 +134,9 @@ def Get_Data():
     
     with open("products_id4.json", "w") as file:
         json.dump(prices, file, indent=5, ensure_ascii=False)
+
+def main():
+    Get_Data()
+
+if __name__ == '__main__':
+    main()
