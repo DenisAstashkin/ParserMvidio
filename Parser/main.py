@@ -77,3 +77,60 @@ def GetPath(names: list, path: str) -> str:
     for name in names:
         res.append(f"{path}{name}")
     return res
+
+
+def Get_Data():   
+    
+    response = GetRespJson("GET", "https://www.mvideo.ru/bff/products/listing")
+    
+    products_id = response.get("body").get("products")
+    
+    json_data = {
+    'productIds': products_id,
+    'mediaTypes': [
+        'images',
+    ],
+    'category': True,
+    'status': True,
+    'brand': True,
+    'propertyTypes': [
+        'KEY',
+    ],
+    'propertiesConfig': {
+        'propertiesPortionSize': 5,
+    },
+    'multioffer': False,
+    }
+
+    response = GetRespJson("POST", "https://www.mvideo.ru/bff/product-details/list", json_data)    
+    links = {}
+    for item in response.get("body").get("products"):
+        nameImage = SaveImage("https://img.mvideo.ru/", "image", item.get("images"))         
+        links[item.get("productId")] =  {
+            "name": item.get("name"),
+            "linkToproduct": f"https://www.mvideo.ru/products/{item.get('nameTranslit')}-{item.get('productId')}",
+            "pathToImage": GetPath(nameImage, f"{PATH}/image/".replace('/', '\\'))
+        }      
+    
+    params = {
+    'productIds': ','.join(products_id),
+    'addBonusRubles': 'true',
+    'isPromoApplied': 'true',
+    }
+
+    response = GetRespJson("GET", "https://www.mvideo.ru/bff/products/prices", params=params)
+    
+    prices = {}
+    materialPrices = response.get("body").get("materialPrices")
+    for item in materialPrices:        
+        prices[item.get("price").get("productId")] = {
+            "name": links[item.get("price").get("productId")]['name'],
+            "basePrice": item.get("price").get("basePrice"),
+            "salePrice": item.get("price").get("salePrice"),
+            "bonusRubles": item.get("bonusRubles").get("total"),
+            "linkToproduct": links[item.get("price").get("productId")]['linkToproduct'],
+            "pathToImage": links[item.get("price").get("productId")]['pathToImage']
+        }
+    
+    with open("products_id4.json", "w") as file:
+        json.dump(prices, file, indent=5, ensure_ascii=False)
