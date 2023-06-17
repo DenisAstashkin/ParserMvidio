@@ -23,46 +23,50 @@ def GetRespJson(TypeReq: str, URL: str, json = None, params=None):
     session = requests.Session()
     
     response = Request()
-    
-    match TypeReq.split():
-        case['GET']:
-            response = session.get(
-            URL,
-            params=PARAMS,
-            cookies=COOKIES,
-            headers=HEADERS,
-            json=json,
-            allow_redirects=False
-            )
-        
-            redirect_url = f'https://www.mvideo.ru{response.headers["Location"]}'
-            if params != None:                
+    try:
+        match TypeReq.split():
+            case['GET']:
                 response = session.get(
-                redirect_url,   
-                params=params,        
-                headers=HEADERS,
+                URL,
+                params=PARAMS,
                 cookies=COOKIES,
-                json=json,
-                allow_redirects=True
-                )
-            else:
-                response = session.get(
-                redirect_url,                          
                 headers=HEADERS,
-                cookies=COOKIES,
                 json=json,
-                allow_redirects=True
+                allow_redirects=False
                 )
-        case['POST']:
-            response = session.post(
-            URL,            
-            cookies=COOKIES,
-            headers=HEADERS,
-            json=json,
-            allow_redirects=False
-            )
             
-    session.close()
+                redirect_url = f'https://www.mvideo.ru{response.headers["Location"]}'
+                if params != None:                
+                    response = session.get(
+                    redirect_url,   
+                    params=params,        
+                    headers=HEADERS,
+                    cookies=COOKIES,
+                    json=json,
+                    allow_redirects=True
+                    )
+                else:
+                    response = session.get(
+                    redirect_url,                          
+                    headers=HEADERS,
+                    cookies=COOKIES,
+                    json=json,
+                    allow_redirects=True
+                    )
+            case['POST']:
+                response = session.post(
+                URL,            
+                cookies=COOKIES,
+                headers=HEADERS,
+                json=json,
+                allow_redirects=False
+                )
+    except Exception:
+        with open("Log.txt", "w") as file:
+            file.write("[ERROR] The request could not be sent. Check your internet connection.")
+        sys.exit()
+    finally:
+        session.close()    
     
     return response.json()
 
