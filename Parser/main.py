@@ -3,9 +3,20 @@ from requests import Request
 import json
 import os
 from conf.config import *
+from sys import argv
+import sys
 
-PATH = os.path.dirname(os.path.abspath(__file__))
-PATH = PATH.replace(PATH[0], PATH[0].upper())
+def CreatePath() -> str:    
+    if len(argv) > 1:       
+        Path = argv[1]
+        if Path[len(Path) - 1] != '\\':            
+            Path += '\\'
+    else:
+        Path = argv[0]
+        Path = Path.replace(os.path.basename(__file__), '')
+    return Path
+
+PATH = CreatePath()
 
 def GetRespJson(TypeReq: str, URL: str, json = None, params=None):     
     
@@ -69,7 +80,6 @@ def SaveImage(URL: str, Path: str, names: list) -> list:
             
             
     return images
-
 
 
 def GetPath(names: list, path: str) -> str:
