@@ -153,4 +153,8 @@ def main():
     Get_Data()
 
 if __name__ == '__main__':
-    main()
+    if os.path.isdir(f'{PATH}image') == False:     
+        os.mkdir('image')
+    main()    
+    with open("Log.txt", "w") as file:
+        file.write("[INFO] The parsing was completed successfully.")
