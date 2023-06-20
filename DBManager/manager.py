@@ -28,4 +28,11 @@ class Manager:
         except Exception:
             return False
             
-
+    def DelItems(self) -> bool:
+        try:
+            with Session(autoflush=False, bind=self.engine) as db:
+                db.query(self.type).delete()
+                db.commit()
+            return True
+        except Exception:
+            return False
