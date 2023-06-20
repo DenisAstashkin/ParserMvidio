@@ -18,4 +18,14 @@ class Manager:
         except Exception:
             return False
 
-    
+    def AddItems(self, items: list) -> bool:
+        try:
+            with Session(autoflush=False, bind=self.engine) as db:
+                self.DelItems()
+                db.add_all(items)
+                db.commit()
+            return True
+        except Exception:
+            return False
+            
+
