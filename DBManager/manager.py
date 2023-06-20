@@ -10,4 +10,12 @@ class Manager:
         self.engine = None
         self.type = type_table
         
+    def Connection(self):
+        try:
+            self.engine = create_engine(self.sql_db)
+            Base.metadata.create_all(bind=self.engine)
+            return True
+        except Exception:
+            return False
+
     
