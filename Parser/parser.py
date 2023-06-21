@@ -1,11 +1,16 @@
 import requests
 from requests import Request
-import json
+from datetime import datetime
 import os
 from conf.config import *
 from sys import argv
 import sys
 import math
+sys.path.insert(1, os.path.join('D:\\C++\\ParserExampleMvidio\\DBManager'))
+from manager import Manager
+sys.path.insert(1, os.path.join('D:\\C++\\ParserExampleMvidio\\DBManager\\Model'))
+from model import Item, Image
+
 
 def CreatePath() -> str:    
     if len(argv) > 1:       
@@ -81,10 +86,18 @@ def SaveImage(URL: str, Path: str, names: list) -> list:
     return images
 
 
+def Logger(info: str, error: str, path: str, res: bool):
+    with open(f"{path}Log.txt", "a") as file:
+            if res:
+                file.write(f"{info}\n")
+            else:
+                file.write(f"{error}\n")
+
+
 def GetPath(names: list, path: str) -> str:
     res = []
     for name in names:
-        res.append(f"{path}{name}")
+        res.append(f"{path}{name.replace('Pdb/', '')}")
     return res
 
 
@@ -102,8 +115,9 @@ def GetPage() -> int:
     return math.ceil(response.get("body").get("total") / 24)
 
 
-def Get_Data():   
-    items = {}    
+def SearchSaveData():   
+    items = []
+    images = []
     for i in range(0, GetPage()):
         response = GetRespJson("GET", "https://www.mvideo.ru/bff/products/listing", params={
                                                                                 'categoryId': '118',
@@ -141,7 +155,7 @@ def Get_Data():
             links[item.get("productId")] =  {
                 "name": item.get("name"),
                 "linkToproduct": f"https://www.mvideo.ru/products/{item.get('nameTranslit')}-{item.get('productId')}",
-                "pathToImage": GetPath(nameImage, f"{PATH}/image/".replace('/', '\\'))
+                "pathToImage": GetPath(nameImage, f"{PATH}image/".replace('/', '\\'))
             }      
         
         params = {
@@ -154,27 +168,56 @@ def Get_Data():
         
         
         materialPrices = response.get("body").get("materialPrices")
+        
         for item in materialPrices:        
-            items[item.get("price").get("productId")] = {
-                "name": links[item.get("price").get("productId")]['name'],
-                "basePrice": item.get("price").get("basePrice"),
-                "salePrice": item.get("price").get("salePrice"),
-                "bonusRubles": item.get("bonusRubles").get("total"),
-                "linkToproduct": links[item.get("price").get("productId")]['linkToproduct'],
-                "pathToImage": links[item.get("price").get("productId")]['pathToImage']
-            }
-        print(f"[INFO] Page {i + 1}/9")
-    with open(f"{PATH}products_id4.json", "a+") as file:
-        json.dump(items, file, indent=5, ensure_ascii=False)
+            items.append(Item(productId=int(item.get("price").get("productId")),
+                        name=links[item.get("price").get("productId")]['name'],
+                        basePrice=int(item.get("price").get("basePrice")),
+                        salePrice=int(item.get("price").get("salePrice")),
+                        bonusRubles=int(item.get("bonusRubles").get("total")),
+                        linkToproduct=links[item.get("price").get("productId")]['linkToproduct']
+                        ))
+            for link in links[item.get("price").get("productId")]['pathToImage']:
+                images.append(Image(productId=int(item.get("price").get("productId")),
+                                    pathImage=link))
+            
+    
+    DB_Saver = Manager(PATH_TO_BD, Item)
+    
+    Logger(info="[INFO] DB connection",
+            error="[ERROR] DB no connection",
+            res=DB_Saver.Connection(),
+            path=PATH)
+    
+    Logger(info="[INFO] All items save",
+            error="[ERROR] Something items save",
+            res=DB_Saver.AddItems(items),
+            path=PATH)
+    
+    DB_Saver = Manager(PATH_TO_BD, Image)
+    Logger(info="[INFO] DB connection",
+            error="[ERROR] DB no connection",
+            res=DB_Saver.Connection(),
+            path=PATH)
+    
+    Logger(info="[INFO] All items save",
+            error="[ERROR] Something items save",
+            res=DB_Saver.AddItems(images),
+            path=PATH)
 
 
-def main():
-    Get_Data()
+
+
 
 
 if __name__ == '__main__':
     if os.path.isdir(f'{PATH}image') == False:     
         os.mkdir(f'{PATH}image')
-    main()    
-    with open(f"{PATH}Log.txt", "w") as file:
-        file.write("[INFO] The parsing was completed successfully.")
+    Logger(info=f"{datetime.now().date()}     |      {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}", 
+            error=None, 
+            res=lambda: True, 
+            path=PATH)
+        
+    SearchSaveData()
+    with open(f"{PATH}Log.txt", "a") as file:
+        file.write("[INFO] The parsing was completed successfully.\n")
