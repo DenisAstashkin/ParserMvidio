@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from Model.model import Base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 
 
 class Manager:
@@ -9,10 +9,12 @@ class Manager:
         self.sql_db = f"sqlite:///{path}"
         self.engine = None
         self.type = type_table
+        self.Session = None
         
     def Connection(self):
         try:
             self.engine = create_engine(self.sql_db)
+            self.Session = sessionmaker(bind=self.engine)
             Base.metadata.create_all(bind=self.engine)
             return True
         except Exception:
@@ -20,19 +22,21 @@ class Manager:
 
     def AddItems(self, items: list) -> bool:
         try:
-            with Session(autoflush=False, bind=self.engine) as db:
-                self.DelItems()
-                db.add_all(items)
-                db.commit()
+            self.DelItems()
+            db = self.Session()
+            db.add_all(items)
+            db.commit()
+            
             return True
-        except Exception:
+        except Exception as ex:    
+            print(ex)        
             return False
             
     def DelItems(self) -> bool:
         try:
-            with Session(autoflush=False, bind=self.engine) as db:
-                db.query(self.type).delete()
-                db.commit()
+            db = self.Session()
+            db.query(self.type).delete()
+            db.commit()
             return True
         except Exception:
             return False
