@@ -211,6 +211,7 @@ def SearchSaveData():
 
 
 if __name__ == '__main__':
+    print("Подождите выполняется парсинг")
     if os.path.isdir(f'{PATH}image') == False:     
         os.mkdir(f'{PATH}image')
     Logger(info=f"{datetime.now().date()}     |      {datetime.now().hour}:{datetime.now().minute}:{datetime.now().second}", 
